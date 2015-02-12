@@ -1,0 +1,14 @@
+webhooks:
+  webhooks_registered_events:
+    client: true
+    default: 'topic_created|post_created'
+    type: list
+  webhooks_url_format:
+    client: true
+    default: 'https://example.com/forum-hook/%{event_name}/'
+  webhooks_verify_ssl:
+    client: true
+    default: true
+  webhooks_include_api_key:
+    client: true
+    default: true
