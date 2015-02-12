@@ -16,7 +16,7 @@ after_initialize do
   User.class_eval do
     # User.as_json seems to be broken due to no User::View being defined?
     # I don't really know what that's about. Let's just hack around it!
-    def as_json
+    def as_json(options = nil)
       user_serializer = UserSerializer.new(self, scope: SYSTEM_GUARDIAN)
       user_serializer.serializable_hash
     end
@@ -30,19 +30,13 @@ after_initialize do
 
   SiteSetting.webhooks_registered_events.split('|').each do |event_name|
 
-    DiscourseEvent.on(event_name.to_sym) do |obj, params, current_user|
-      params_hash = {
-        :obj => obj,
-        :params => params,
-        :user => current_user
-      }.as_json
-
+    DiscourseEvent.on(event_name.to_sym) do |*params|
       if SiteSetting.webhooks_include_api_key
         api_key = ApiKey.find_by(user_id: nil)
         if not api_key
           Rails.logger.warn('Webhooks configured to include the "All User" API key, but it does not exist.')
         else
-          params_hash['api_key'] = api_key.key
+          params.unshift(api_key.key)
         end
       end
 
@@ -53,7 +47,7 @@ after_initialize do
 
       request = Net::HTTP::Post.new(uri.path)
       request.add_field('Content-Type', 'application/json')
-      request.body = params_hash.to_json
+      request.body = params.to_json
 
       response = http.request(request)
       case response
