@@ -1,5 +1,6 @@
 en:
   site_settings:
+    webhooks_enabled: 'Check this to enable the plugin. Otherwise, no HTTP requests will be sent in response to the events.'
     webhooks_registered_events: 'You will need to restart Discourse to pick up changes to this list. For a list of possible events and their parameters, see: https://github.com/discourse/discourse/search?q=DiscourseEvent.trigger+path%3A%2Flib+path%3A%2Fapp&type=Code'
     webhooks_url_format: 'Customizable URL to request upon receiving an event. Use %{event_name} to insert the name of the event, as show in the list above.'
     webhooks_verify_ssl: 'Uncheck this to disable SSL verification for webhook HTTPS requests. NOT RECOMMENDED.'

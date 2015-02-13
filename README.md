@@ -14,5 +14,6 @@ Add the ability to make HTTP requests from Discourse in response to certain even
 
 4. If you need to change the list of events that are registered, you'll need to restart Discourse to pick up those changes. There's currently no way to unregister events at run-time, and no way to determine which events were already registered by this plugin.
 
-
 5. There are no formal event definitions. To get a list of possible events, check the [Discourse source code](https://github.com/discourse/discourse/search?q=DiscourseEvent.trigger+path%3A%2Flib+path%3A%2Fapp&type=Code)
+
+6. Make sure to check the "webhooks enabled" box to start sending HTTP requests for events.

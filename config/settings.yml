@@ -1,4 +1,7 @@
 webhooks:
+  webhooks_enabled:
+    client: true
+    default: false
   webhooks_registered_events:
     client: true
     default: 'topic_created|post_created'

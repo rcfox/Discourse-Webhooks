@@ -31,6 +31,9 @@ after_initialize do
   SiteSetting.webhooks_registered_events.split('|').each do |event_name|
 
     DiscourseEvent.on(event_name.to_sym) do |*params|
+
+      next unless SiteSetting.webhooks_enabled
+
       if SiteSetting.webhooks_include_api_key
         api_key = ApiKey.find_by(user_id: nil)
         if not api_key
