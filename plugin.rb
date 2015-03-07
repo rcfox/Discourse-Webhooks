@@ -25,7 +25,7 @@ after_initialize do
   def build_event_url(url_template, event_name)
     url = String.new(url_template)
     url.gsub!("%{event_name}", event_name)
-    Addressable::URI.escape url
+    return url
   end
 
   SiteSetting.webhooks_registered_events.split('|').each do |event_name|
