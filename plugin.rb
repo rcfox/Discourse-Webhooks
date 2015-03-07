@@ -2,6 +2,7 @@
 # about: Make HTTP requests when certain events occur
 # version: 0.1
 # authors: Ryan Fox
+# url: https://github.com/rcfox/Discourse-Webhooks
 
 after_initialize do
 
