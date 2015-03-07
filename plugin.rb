@@ -4,6 +4,8 @@
 # authors: Ryan Fox
 # url: https://github.com/rcfox/Discourse-Webhooks
 
+gem "addressable", "2.3.6"
+
 after_initialize do
 
   SYSTEM_GUARDIAN = Guardian.new(User.find_by(id: -1))
