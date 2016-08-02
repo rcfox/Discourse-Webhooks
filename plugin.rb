@@ -54,12 +54,12 @@ after_initialize do
 
       # Need params message and metadata
       link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
-      actionVerb = "said"
+      actionVerb = "commented on"
       if (event_name == "topic_created")
-        actionVerb = "posted"
+        actionVerb = "created a new topic"
       end
       Rails.logger.info("Raw webhook params: #{params.to_json}")
-      body = {:message => "#{params[2].username} #{actionVerb} in [#{params[0].title}](#{link}):\n #{params[1].raw}", :metadata => event_name}
+      body = {:message => "#{params[2].username} #{actionVerb} [#{params[0].title}](#{link}):\n\n #{params[1].raw}", :metadata => event_name}
       Rails.logger.info("Webhook body: #{body.to_json}")
       request.body = body.to_json
 
