@@ -53,8 +53,13 @@ after_initialize do
       request.add_field('Content-Type', 'application/json')
 
       # Need params message and metadata
+      link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
+      actionVerb = "said"
+      if (event_name == "topic_created")
+        actionVerb = "posted"
+      end
       Rails.logger.info("Raw webhook params: #{params.to_json}")
-      body = {:message => "#{params[2].username} said:\n #{params[0].raw}", :metadata => event_name}
+      body = {:message => "#{params[2].username} #{actionVerb} in [#{params[0].title}](#{link}):\n #{params[1].raw}", :metadata => event_name}
       Rails.logger.info("Webhook body: #{body.to_json}")
       request.body = body.to_json
 
