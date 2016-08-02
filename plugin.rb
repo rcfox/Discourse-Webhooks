@@ -51,7 +51,10 @@ after_initialize do
 
       request = Net::HTTP::Post.new(uri.path)
       request.add_field('Content-Type', 'application/json')
-      request.body = params.to_json
+      # Need params message and metadata
+      body = params.to_json
+      Rails.logger.info("Webhook body: #{body}")
+      request.body = body
 
       response = http.request(request)
       case response
