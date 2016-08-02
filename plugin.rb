@@ -51,11 +51,21 @@ after_initialize do
 
       request = Net::HTTP::Post.new(uri.path)
       request.add_field('Content-Type', 'application/json')
-      # Need params message and metadata
-      body = params.to_json
-      Rails.logger.info("Webhook body: #{body}")
-      request.body = body
 
+      # Need params message and metadata
+      Rails.logger.info("Raw webhook params: #{params.to_json}")
+      body = {:message => "#{params[2].username} said:\n #{params[0].raw}", :metadata => event_name}
+      Rails.logger.info("Webhook body: #{body.to_json}")
+      request.body = body.to_json
+
+
+
+      # Old code
+      #body = params.to_json
+      #Rails.logger.info("Webhook body: #{body}")
+      #request.body = body
+
+      # Send request
       response = http.request(request)
       case response
       when Net::HTTPSuccess then
