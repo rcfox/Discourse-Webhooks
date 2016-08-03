@@ -52,25 +52,20 @@ after_initialize do
       request = Net::HTTP::Post.new(uri.path)
       request.add_field('Content-Type', 'application/json')
 
-      # Need params message and metadata
       Rails.logger.info("Raw webhook params: #{params.to_json}")
       Rails.logger.info("Raw webhook params object: #{params}")
-      link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
-      actionVerb = "commented on"
+
+      # Make webhook body
       if (event_name == "topic_created")
-        actionVerb = "created a new topic"
+        link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
+        body = {:message => "#{params[2].username} created topic [#{params[1].title}](#{link}):\n\n #{params[1].raw}", :metadata => event_name}
+        Rails.logger.info("topic_created webhook body: #{body.to_json}")
+        request.body = body.to_json
+      elsif (event_name == "post_created")
+        body = {:message => "#{params[2].username} posted in a [thread](#{params[1].referrer}):\n\n #{params[1].raw}", :metadata => event_name}
+        Rails.logger.info("post_created webhook body: #{body.to_json}")
+        request.body = body.to_json
       end
-      Rails.logger.info("Webhook topic link: #{link}")
-      body = {:message => "#{params[2].username} #{actionVerb} [#{params[0].title}](#{link}):\n\n #{params[1].raw}", :metadata => event_name}
-      Rails.logger.info("Webhook body: #{body.to_json}")
-      request.body = body.to_json
-
-
-
-      # Old code
-      #body = params.to_json
-      #Rails.logger.info("Webhook body: #{body}")
-      #request.body = body
 
       # Send request
       response = http.request(request)
