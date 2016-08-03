@@ -52,14 +52,6 @@ after_initialize do
       request = Net::HTTP::Post.new(uri.path)
       request.add_field('Content-Type', 'application/json')
 
-      Rails.logger.info("Raw webhook params: #{params.to_json}")
-      Rails.logger.info("Raw webhook params object: #{params}")
-
-      Rails.logger.info("Inspect params: #{params.inspect}")
-      Rails.logger.info("Inspect params[0]: #{params[0].inspect}")
-      Rails.logger.info("Inspect params[1]: #{params[1].inspect}")
-      Rails.logger.info("Inspect params[2]: #{params[2].inspect}")
-
       # Make webhook body
       if (event_name == "topic_created")
         link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
