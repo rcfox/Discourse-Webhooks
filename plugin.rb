@@ -52,6 +52,9 @@ after_initialize do
       request = Net::HTTP::Post.new(uri.path)
       request.add_field('Content-Type', 'application/json')
 
+      Rails.logger.info("Raw webhook params: #{params.to_json}")
+      Rails.logger.info("Raw webhook params object: #{params}")
+
       # Make webhook body
       if (event_name == "topic_created")
         link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
@@ -59,7 +62,7 @@ after_initialize do
         Rails.logger.info("topic_created webhook body: #{body.to_json}")
         request.body = body.to_json
       elsif (event_name == "post_created")
-        body = {:message => "#{params[2].username} posted in a [thread](#{params[1]["referrer"]}):\n\n #{params[1]["raw"]}", :metadata => event_name}
+        body = {:message => "#{params[2].username} posted in a [thread](https://developer.mypurecloud.com/forum/t/#{params[0].topic_id}):\n\n #{params[1]["raw"]}", :metadata => event_name}
         Rails.logger.info("post_created webhook body: #{body.to_json}")
         request.body = body.to_json
       end
