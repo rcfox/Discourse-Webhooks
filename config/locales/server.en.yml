@@ -5,3 +5,4 @@ en:
     webhooks_url_format: 'Customizable URL to request upon receiving an event. Use %{event_name} to insert the name of the event, as show in the list above.'
     webhooks_verify_ssl: 'Uncheck this to disable SSL verification for webhook HTTPS requests. NOT RECOMMENDED.'
     webhooks_include_api_key: 'Include the "All Users" API key as a parameter to allow verification of the source of the webhook.'
+    webhooks_logging_enabled: 'Check this to enable logging of the webhook parameter data.'
