@@ -75,14 +75,14 @@ after_initialize do
       elsif (params[1].nil? || params[1]["archetype"] != "regular")
         # Ignore unknown archetypes
         if (SiteSetting.webhooks_logging_enabled)
-          Rails.logger.info("Ignoring unknown archetype: #{params.to_json}")
+          Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{params.to_json}")
         end
         next
       end
 
       # Log params object
       if (SiteSetting.webhooks_logging_enabled)
-        Rails.logger.info("Webhook params: #{params.to_json}")
+        Rails.logger.info("Webhook event #{event_name}: #{params.to_json}")
       end
 
       # Send request
