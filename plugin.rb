@@ -52,19 +52,37 @@ after_initialize do
       request = Net::HTTP::Post.new(uri.path)
       request.add_field('Content-Type', 'application/json')
 
-      Rails.logger.info("Raw webhook params: #{params.to_json}")
-      Rails.logger.info("Raw webhook params object: #{params}")
-
       # Make webhook body
+      known_event = false
       if (event_name == "topic_created")
         link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
         body = {:message => "#{params[2].username} created topic [#{params[1]["title"]}](#{link}):\n\n #{params[1]["raw"]}", :metadata => event_name}
-        Rails.logger.info("topic_created webhook body: #{body.to_json}")
         request.body = body.to_json
+        known_event = true
       elsif (event_name == "post_created")
         body = {:message => "#{params[2].username} posted in a [thread](https://developer.mypurecloud.com/forum/t/#{params[0].topic_id}):\n\n #{params[1]["raw"]}", :metadata => event_name}
-        Rails.logger.info("post_created webhook body: #{body.to_json}")
         request.body = body.to_json
+        known_event = true
+      end
+
+      # Cancel processing
+      if (known_event != true)
+        # Ignore unknown events
+        if (SiteSetting.webhooks_logging_enabled)
+          Rails.logger.info("Ignoring #{event_name} event: #{params.to_json}"
+        end
+        next
+      elsif (params[1].nil? || params[1] != "regular")
+        # Ignore unknown archetypes
+        if (SiteSetting.webhooks_logging_enabled)
+          Rails.logger.info("Ignoring unknown archetype: #{params.to_json}"
+        end
+        next
+      end
+
+      # Log params object
+      if (SiteSetting.webhooks_logging_enabled)
+        Rails.logger.info("Webhook params: #{params.to_json}")
       end
 
       # Send request
