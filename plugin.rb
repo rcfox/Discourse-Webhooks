@@ -4,11 +4,6 @@
 # authors: Ryan Fox
 # url: https://github.com/rcfox/Discourse-Webhooks
 
-gem 'faraday', '0.9.0'
-gem 'faraday_middleware', '0.9.0'
-gem 'rack', '1.5'
-gem 'discourse_api', '0.13.0'
-
 after_initialize do
 
   SYSTEM_GUARDIAN = Guardian.new(User.find_by(id: -1))
@@ -41,11 +36,12 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       # Configure API client
-      client = DiscourseApi::Client.new("http://localhost:3000")
-      client.api_key = SiteSetting.webhooks_discourse_api_key
-      client.api_username = SiteSetting.webhooks_discourse_api_username
-      api_topic = client.topic(params[0].id)
-      Rails.logger.info(api_topic)
+      topic_url = URI.parse("http://localhost:3000/t/#{params[0].id}.json")
+      topic_request = Net::HTTP::Get.new(topic_url.to_s)
+      topic_response = Net::HTTP.start(topic_url.host, topic_url.port) {|topic_http|
+        topic_http.request(topic_request)
+      }
+      Rails.logger.info(topic_response.body)
 
       if SiteSetting.webhooks_include_api_key
         api_key = ApiKey.find_by(user_id: nil)
