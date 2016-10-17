@@ -36,12 +36,22 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       # Configure API client
-      topic_url = URI.parse("http://localhost:3000/t/#{params[0].id}.json")
-      topic_request = Net::HTTP::Get.new(topic_url.to_s)
-      topic_response = Net::HTTP.start(topic_url.host, topic_url.port) {|topic_http|
-        topic_http.request(topic_request)
-      }
-      Rails.logger.info(topic_response.body)
+      topic_uri = URI.parse("http://localhost:3000/t/#{params[0].id}.json")
+      topic_http = Net::HTTP.new(topic_uri.host, topic_uri.port)
+      topic_http.use_ssl = true if topic_uri.scheme == 'https'
+      topic_http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      topic_request = Net::HTTP::Get.new(topic_uri.path)
+
+      # Send request
+      Rails.logger.info("Getting topic from: #{topic_uri.to_s}")
+      topic_response = topic_http.request(topic_request)
+      case topic_response
+      when Net::HTTPSuccess then
+        Rails.logger.info(topic_response.body)
+      else
+        Rails.logger.error("#{topic_uri}: #{topic_response.code} - #{topic_response.message}")
+      end
+
 
       if SiteSetting.webhooks_include_api_key
         api_key = ApiKey.find_by(user_id: nil)
