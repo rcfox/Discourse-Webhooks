@@ -111,7 +111,7 @@ after_initialize do
         else
           Rails.logger.error("#{uri}: #{response.code} - #{response.message}")
         end
-      rescue ex =>
+      rescue => ex
         Rails.logger.error(ex.message)
       end
     end
