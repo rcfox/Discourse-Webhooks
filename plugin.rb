@@ -4,7 +4,10 @@
 # authors: Ryan Fox
 # url: https://github.com/rcfox/Discourse-Webhooks
 
-gem 'discourse_api'
+gem 'discourse_api', '0.13.0'
+gem 'faraday', '0.9.0'
+gem 'faraday_middleware', '0.9.0'
+gem 'rack', '1.5'
 
 after_initialize do
 
