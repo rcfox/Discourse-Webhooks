@@ -32,84 +32,87 @@ after_initialize do
   SiteSetting.webhooks_registered_events.split('|').each do |event_name|
 
     DiscourseEvent.on(event_name.to_sym) do |*params|
+      begin
+        next unless SiteSetting.webhooks_enabled
 
-      next unless SiteSetting.webhooks_enabled
+        # Configure API client
+        topic_uri = URI.parse("https://developer.mypurecloud.com/t/#{params[0].topic_id}.json")
+        topic_http = Net::HTTP.new(topic_uri.host, topic_uri.port)
+        topic_http.use_ssl = true if topic_uri.scheme == 'https'
+        topic_http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        topic_request = Net::HTTP::Get.new(topic_uri.path)
 
-      # Configure API client
-      topic_uri = URI.parse("http://localhost:3000/t/#{params[0].id}.json")
-      topic_http = Net::HTTP.new(topic_uri.host, topic_uri.port)
-      topic_http.use_ssl = true if topic_uri.scheme == 'https'
-      topic_http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      topic_request = Net::HTTP::Get.new(topic_uri.path)
-
-      # Send request
-      Rails.logger.info("Getting topic from: #{topic_uri.to_s}")
-      topic_response = topic_http.request(topic_request)
-      case topic_response
-      when Net::HTTPSuccess then
-        Rails.logger.info(topic_response.body)
-      else
-        Rails.logger.error("#{topic_uri}: #{topic_response.code} - #{topic_response.message}")
-      end
-
-
-      if SiteSetting.webhooks_include_api_key
-        api_key = ApiKey.find_by(user_id: nil)
-        if not api_key
-          Rails.logger.warn('Webhooks configured to include the "All User" API key, but it does not exist.')
+        # Send request
+        Rails.logger.info("Getting topic from: #{topic_uri.to_s}")
+        topic_response = topic_http.request(topic_request)
+        case topic_response
+        when Net::HTTPSuccess then
+          Rails.logger.info(topic_response.body)
         else
-          params.unshift(api_key.key)
+          Rails.logger.error("#{topic_uri}: #{topic_response.code} - #{topic_response.message}")
         end
-      end
 
-      uri = URI.parse(build_event_url(SiteSetting.webhooks_url_format, event_name))
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true if uri.scheme == 'https'
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless SiteSetting.webhooks_verify_ssl
 
-      request = Net::HTTP::Post.new(uri.path)
-      request.add_field('Content-Type', 'application/json')
+        if SiteSetting.webhooks_include_api_key
+          api_key = ApiKey.find_by(user_id: nil)
+          if not api_key
+            Rails.logger.warn('Webhooks configured to include the "All User" API key, but it does not exist.')
+          else
+            params.unshift(api_key.key)
+          end
+        end
 
-      # Make webhook body
-      known_event = false
-      if (event_name == "topic_created")
-        link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
-        body = {:message => "#{params[2].username} created topic [#{params[1]["title"]}](#{link}):\n\n #{params[1]["raw"]}", :metadata => event_name}
-        request.body = body.to_json
-        known_event = true
-      elsif (event_name == "post_created")
-        body = {:message => "#{params[2].username} posted in a [thread](https://developer.mypurecloud.com/forum/t/#{params[0].topic_id}):\n\n #{params[1]["raw"]}", :metadata => event_name}
-        request.body = body.to_json
-        known_event = true
-      end
+        uri = URI.parse(build_event_url(SiteSetting.webhooks_url_format, event_name))
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true if uri.scheme == 'https'
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless SiteSetting.webhooks_verify_ssl
 
-      # Cancel processing
-      if (known_event != true)
-        # Ignore unknown events
+        request = Net::HTTP::Post.new(uri.path)
+        request.add_field('Content-Type', 'application/json')
+
+        # Make webhook body
+        known_event = false
+        if (event_name == "topic_created")
+          link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
+          body = {:message => "#{params[2].username} created topic [#{params[1]["title"]}](#{link}):\n\n #{params[1]["raw"]}", :metadata => event_name}
+          request.body = body.to_json
+          known_event = true
+        elsif (event_name == "post_created")
+          body = {:message => "#{params[2].username} posted in a [thread](https://developer.mypurecloud.com/forum/t/#{params[0].topic_id}):\n\n #{params[1]["raw"]}", :metadata => event_name}
+          request.body = body.to_json
+          known_event = true
+        end
+
+        # Cancel processing
+        if (known_event != true)
+          # Ignore unknown events
+          if (SiteSetting.webhooks_logging_enabled)
+            Rails.logger.info("Ignoring #{event_name} event: #{params.to_json}")
+          end
+          next
+        elsif (params[1].nil? || params[1]["archetype"] != "regular")
+          # Ignore unknown archetypes
+          if (SiteSetting.webhooks_logging_enabled)
+            Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{params.to_json}")
+          end
+          next
+        end
+
+        # Log params object
         if (SiteSetting.webhooks_logging_enabled)
-          Rails.logger.info("Ignoring #{event_name} event: #{params.to_json}")
+          Rails.logger.info("Webhook event #{event_name}: #{params.to_json}")
         end
-        next
-      elsif (params[1].nil? || params[1]["archetype"] != "regular")
-        # Ignore unknown archetypes
-        if (SiteSetting.webhooks_logging_enabled)
-          Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{params.to_json}")
+
+        # Send request
+        response = http.request(request)
+        case response
+        when Net::HTTPSuccess then
+          # nothing
+        else
+          Rails.logger.error("#{uri}: #{response.code} - #{response.message}")
         end
-        next
-      end
-
-      # Log params object
-      if (SiteSetting.webhooks_logging_enabled)
-        Rails.logger.info("Webhook event #{event_name}: #{params.to_json}")
-      end
-
-      # Send request
-      response = http.request(request)
-      case response
-      when Net::HTTPSuccess then
-        # nothing
-      else
-        Rails.logger.error("#{uri}: #{response.code} - #{response.message}")
+      rescue ex =>
+        Rails.logger.error(ex.message)
       end
     end
 
