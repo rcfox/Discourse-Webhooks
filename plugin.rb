@@ -4,6 +4,8 @@
 # authors: Ryan Fox
 # url: https://github.com/rcfox/Discourse-Webhooks
 
+require 'json'
+
 after_initialize do
 
   SYSTEM_GUARDIAN = Guardian.new(User.find_by(id: -1))
@@ -35,19 +37,21 @@ after_initialize do
       begin
         next unless SiteSetting.webhooks_enabled
 
-        # Configure API client
-        topic_uri = URI.parse("https://developer.mypurecloud.com/t/#{params[0].topic_id}.json")
+        # Configure topic request
+        topic_uri = URI.parse("https://developer.mypurecloud.com/forum/t/#{params[0].topic_id}.json")
         topic_http = Net::HTTP.new(topic_uri.host, topic_uri.port)
         topic_http.use_ssl = true if topic_uri.scheme == 'https'
         topic_http.verify_mode = OpenSSL::SSL::VERIFY_NONE
         topic_request = Net::HTTP::Get.new(topic_uri.path)
 
-        # Send request
+        # Send topic request
         Rails.logger.info("Getting topic from: #{topic_uri.to_s}")
         topic_response = topic_http.request(topic_request)
+        topic_json = {}
         case topic_response
         when Net::HTTPSuccess then
           Rails.logger.info(topic_response.body)
+          topic_json = JSON.parse(topic_json)
         else
           Rails.logger.error("#{topic_uri}: #{topic_response.code} - #{topic_response.message}")
         end
@@ -62,6 +66,7 @@ after_initialize do
           end
         end
 
+        # Build webhook request
         uri = URI.parse(build_event_url(SiteSetting.webhooks_url_format, event_name))
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true if uri.scheme == 'https'
@@ -70,15 +75,17 @@ after_initialize do
         request = Net::HTTP::Post.new(uri.path)
         request.add_field('Content-Type', 'application/json')
 
+        # Make topic link
+        topic_link = "[#{topic_json["title"]}](https://developer.mypurecloud.com/forum/t/#{topic_json["slug"]}/#{topic_json["id"]})"
+
         # Make webhook body
         known_event = false
         if (event_name == "topic_created")
-          link = "https://developer.mypurecloud.com/forum/t/#{params[0].slug}/#{params[0].id}"
-          body = {:message => "#{params[2].username} created topic [#{params[1]["title"]}](#{link}):\n\n #{params[1]["raw"]}", :metadata => event_name}
+          body = {:message => "#{params[2].username} created topic #{topic_link}", :metadata => event_name}
           request.body = body.to_json
           known_event = true
         elsif (event_name == "post_created")
-          body = {:message => "#{params[2].username} posted in a [thread](https://developer.mypurecloud.com/forum/t/#{params[0].topic_id}):\n\n #{params[1]["raw"]}", :metadata => event_name}
+          body = {:message => "#{params[2].username} posted in #{topic_link}:\n\n#{params[1]["raw"]}", :metadata => event_name}
           request.body = body.to_json
           known_event = true
         end
@@ -90,7 +97,7 @@ after_initialize do
             Rails.logger.info("Ignoring #{event_name} event: #{params.to_json}")
           end
           next
-        elsif (params[1].nil? || params[1]["archetype"] != "regular")
+        elsif (topic_json["archetype"] != "regular")
           # Ignore unknown archetypes
           if (SiteSetting.webhooks_logging_enabled)
             Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{params.to_json}")
@@ -103,7 +110,7 @@ after_initialize do
           Rails.logger.info("Webhook event #{event_name}: #{params.to_json}")
         end
 
-        # Send request
+        # Send webhook request
         response = http.request(request)
         case response
         when Net::HTTPSuccess then
