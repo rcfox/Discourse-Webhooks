@@ -50,10 +50,9 @@ after_initialize do
         topic_json = {}
         case topic_response
         when Net::HTTPSuccess then
-          Rails.logger.info(topic_response.body)
-          topic_json = JSON.parse(topic_json)
+          topic_json = JSON.parse(topic_response.body)
         else
-          Rails.logger.error("#{topic_uri}: #{topic_response.code} - #{topic_response.message}")
+          Rails.logger.error("[TOPIC ERROR] for #{topic_uri}: #{topic_response.code} - #{topic_response.message}")
         end
 
 
