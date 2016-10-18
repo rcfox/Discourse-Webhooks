@@ -63,6 +63,7 @@ after_initialize do
         case topic_response
         when Net::HTTPSuccess then
           topic_json = JSON.parse(topic_response.body)
+          Rails.logger.debug("event_name=#{event_name}\ntopic_json=#{topic_json}")
         else
           Rails.logger.error("[TOPIC ERROR] for #{topic_uri}: #{topic_response.code} - #{topic_response.message}")
         end
@@ -111,7 +112,17 @@ after_initialize do
         elsif (topic_json["archetype"] != "regular")
           # Ignore unknown archetypes
           if (SiteSetting.webhooks_logging_enabled)
-            Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{params.to_json}")
+            Rails.logger.debug("topic_json["archetype"] -> #{topic_json["archetype"]}")
+
+            if (topic_json["archetype"].to_s != "regular")
+              Rails.logger.debug("topic_json[archetype].to_s != regular (double quotes)")
+            elsif (topic_json["archetype"].to_s != 'regular')
+              Rails.logger.debug("topic_json[archetype].to_s != regular (single quotes)")
+            else
+              Rails.logger.debug("[EQUAL] topic_json["archetype"].to_s")
+            end
+
+            Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{topic_json}")
           end
           next
         end
