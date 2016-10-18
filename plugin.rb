@@ -50,11 +50,12 @@ after_initialize do
         end
 
         # Configure topic request
-        topic_uri = URI.parse("#{site_url}t/#{topic_id}.json?api_key=#{SiteSetting.webhooks_discourse_api_key}&api_username=#{SiteSetting.webhooks_discourse_api_username}")
+        topic_uri = URI.parse("#{site_url}t/#{topic_id}.json")
+        topic_uri.query = URI.encode_www_form({:api_key => SiteSetting.webhooks_discourse_api_key, :api_username => SiteSetting.webhooks_discourse_api_username})
         topic_http = Net::HTTP.new(topic_uri.host, topic_uri.port)
         topic_http.use_ssl = true if topic_uri.scheme == 'https'
         topic_http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-        topic_request = Net::HTTP::Get.new(topic_uri.path)
+        topic_request = Net::HTTP::Get.new(topic_uri)
 
         # Send topic request
         Rails.logger.info("Getting topic from: #{topic_uri.to_s}")
