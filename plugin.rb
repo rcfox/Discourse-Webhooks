@@ -37,14 +37,10 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
-        Rails.logger.debug("DiscourseEvent.on(:#{event_name})\n#{params.to_json}")
-
         site_url = SiteSetting.webhooks_site_url
         if (not(site_url.end_with? "/"))
           site_url = "#{site_url}/"
         end
-
-        Rails.logger.debug("site_url:#{site_url}")
 
         topic_id = -1;
         if (event_name == "topic_created")
@@ -55,7 +51,6 @@ after_initialize do
 
         # Configure topic request
         topic_uri = URI.parse("#{site_url}t/#{topic_id}.json")
-        Rails.logger.debug("topic_uri=#{topic_uri}")
         topic_http = Net::HTTP.new(topic_uri.host, topic_uri.port)
         topic_http.use_ssl = true if topic_uri.scheme == 'https'
         topic_http.verify_mode = OpenSSL::SSL::VERIFY_NONE
