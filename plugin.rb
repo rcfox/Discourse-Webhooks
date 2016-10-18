@@ -37,12 +37,14 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
+        Rails.logger.debug("DiscourseEvent.on(:#{event_name}):\nevent_name=#{event_name}")
+
         site_url = webhooks_site_url
         if (not(site_url.end_with? "/"))
           site_url = "#{site_url}/"
         end
 
-        Rails.logger.debug("[DiscourseEvent.on(:#{event_name}):\nevent_name=#{event_name}\nsite_url:#{site_url}")
+        Rails.logger.debug("site_url:#{site_url}")
 
         # Configure topic request
         topic_uri = URI.parse("#{site_url}t/#{params[0].topic_id}.json")
