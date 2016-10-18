@@ -18,9 +18,6 @@ webhooks:
   webhooks_logging_enabled:
     client: true
     default: false
-  webhooks_discourse_api_key:
+  webhooks_site_url:
     client: true
-    default: ''
-  webhooks_discourse_api_username:
-    client: true
-    default: ''
+    default: 'https://discourse.mysite.com/forum/'

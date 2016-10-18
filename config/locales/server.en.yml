@@ -6,5 +6,4 @@ en:
     webhooks_verify_ssl: 'Uncheck this to disable SSL verification for webhook HTTPS requests. NOT RECOMMENDED.'
     webhooks_include_api_key: 'Include the "All Users" API key as a parameter to allow verification of the source of the webhook.'
     webhooks_logging_enabled: 'Check this to enable logging of the webhook parameter data.'
-    webhooks_discourse_api_key: 'The Discourse API key to use for API requests'
-    webhooks_discourse_api_username: 'The Discourse admin username to use for API requests'
+    webhooks_site_url: 'The discourse site URL'

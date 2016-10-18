@@ -34,11 +34,19 @@ after_initialize do
   SiteSetting.webhooks_registered_events.split('|').each do |event_name|
 
     DiscourseEvent.on(event_name.to_sym) do |*params|
+      next unless SiteSetting.webhooks_enabled
+
       begin
-        next unless SiteSetting.webhooks_enabled
+        site_url = webhooks_site_url
+        if (not(site_url.end_with? "/"))
+          site_url = "#{site_url}/"
+        end
+
+        Rails.logger.debug("[DiscourseEvent.on(:#{event_name}):\nevent_name=#{event_name}\nsite_url:#{site_url}")
 
         # Configure topic request
-        topic_uri = URI.parse("https://developer.mypurecloud.com/forum/t/#{params[0].topic_id}.json")
+        topic_uri = URI.parse("#{site_url}t/#{params[0].topic_id}.json")
+        Rails.logger.debug("topic_uri=#{topic_uri}")
         topic_http = Net::HTTP.new(topic_uri.host, topic_uri.port)
         topic_http.use_ssl = true if topic_uri.scheme == 'https'
         topic_http.verify_mode = OpenSSL::SSL::VERIFY_NONE
@@ -75,7 +83,7 @@ after_initialize do
         request.add_field('Content-Type', 'application/json')
 
         # Make topic link
-        topic_link = "[#{topic_json["title"]}](https://developer.mypurecloud.com/forum/t/#{topic_json["slug"]}/#{topic_json["id"]})"
+        topic_link = "[#{topic_json["title"]}](#{site_url}t/#{topic_json["slug"]}/#{topic_json["id"]})"
 
         # Make webhook body
         known_event = false
