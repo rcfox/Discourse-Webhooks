@@ -112,14 +112,14 @@ after_initialize do
         elsif (topic_json["archetype"] != "regular")
           # Ignore unknown archetypes
           if (SiteSetting.webhooks_logging_enabled)
-            Rails.logger.debug("topic_json["archetype"] -> #{topic_json["archetype"]}")
+            Rails.logger.debug("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
 
             if (topic_json["archetype"].to_s != "regular")
               Rails.logger.debug("topic_json[archetype].to_s != regular (double quotes)")
             elsif (topic_json["archetype"].to_s != 'regular')
               Rails.logger.debug("topic_json[archetype].to_s != regular (single quotes)")
             else
-              Rails.logger.debug("[EQUAL] topic_json["archetype"].to_s")
+              Rails.logger.debug("[EQUAL] topic_json[\"archetype\"].to_s")
             end
 
             Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{topic_json}")
