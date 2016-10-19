@@ -40,6 +40,7 @@ after_initialize do
 
     request = Net::HTTP::Post.new(uri.path)
     request.add_field('Content-Type', 'application/json')
+    request.body = body
 
     # Send webhook request
     response = http.request(request)
@@ -65,8 +66,8 @@ after_initialize do
         Rails.logger.debug("user_created: #{params.to_json}")
       end
       if (SiteSetting.webhooks_new_user_notification)
-        body = "[#{params[0]["username"]}](#{get_site_url()}users/#{params[0]["username"]}/) has joined the forum"
-        send_webhook(body, "user_created")
+        body = {:message => "[#{params[0]["username"]}](#{get_site_url()}users/#{params[0]["username"]}/) has joined the forum", :metadata => "user_created"}
+        send_webhook(body.to_json, "user_created")
       end
     rescue => ex
       Rails.logger.error(ex.message)
