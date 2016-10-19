@@ -31,8 +31,42 @@ after_initialize do
     return url
   end
 
+  def send_webhook(body, event_name)
+    # Build webhook request
+    uri = URI.parse(build_event_url(SiteSetting.webhooks_url_format, event_name))
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true if uri.scheme == 'https'
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless SiteSetting.webhooks_verify_ssl
+
+    request = Net::HTTP::Post.new(uri.path)
+    request.add_field('Content-Type', 'application/json')
+
+    # Send webhook request
+    response = http.request(request)
+    case response
+    when Net::HTTPSuccess then
+      # nothing
+    else
+      Rails.logger.error("#{uri}: #{response.code} - #{response.message}")
+    end
+  end
+
+  def get_site_url()
+    site_url = SiteSetting.webhooks_site_url
+    if (not(site_url.end_with? "/"))
+      site_url = "#{site_url}/"
+    end
+    return site_url
+  end
+
   DiscourseEvent.on(:user_created) do |*params|
-    Rails.logger.debug("user_created: #{params.to_json}")
+    if (SiteSetting.webhooks_logging_enabled)
+      Rails.logger.debug("user_created: #{params.to_json}")
+    end
+    if (SiteSetting.webhooks_new_user_notification)
+      body = "[#{params["username"]}](#{get_site_url()}users/#{params["username"]}/) has joined the forum"
+      send_webhook(body, "user_created")
+    end
   end
 
   SiteSetting.webhooks_registered_events.split('|').each do |event_name|
@@ -41,10 +75,7 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
-        site_url = SiteSetting.webhooks_site_url
-        if (not(site_url.end_with? "/"))
-          site_url = "#{site_url}/"
-        end
+        site_url = get_site_url()
 
         topic_id = -1;
         if (event_name == "topic_created")
@@ -83,27 +114,21 @@ after_initialize do
           end
         end
 
-        # Build webhook request
-        uri = URI.parse(build_event_url(SiteSetting.webhooks_url_format, event_name))
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true if uri.scheme == 'https'
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless SiteSetting.webhooks_verify_ssl
 
-        request = Net::HTTP::Post.new(uri.path)
-        request.add_field('Content-Type', 'application/json')
 
         # Make topic link
         topic_link = "[#{topic_json["title"]}](#{site_url}t/#{topic_json["slug"]}/#{topic_json["id"]})"
 
         # Make webhook body
         known_event = false
+        body = ''
         if (event_name == "topic_created")
           body = {:message => "#{params[2].username} created topic #{topic_link}", :metadata => event_name}
-          request.body = body.to_json
+          body = body.to_json
           known_event = true
         elsif (event_name == "post_created")
           body = {:message => "#{params[2].username} posted in #{topic_link}:\n\n#{params[1]["raw"]}", :metadata => event_name}
-          request.body = body.to_json
+          body = body.to_json
           known_event = true
         end
 
@@ -137,14 +162,7 @@ after_initialize do
           Rails.logger.info("Webhook event #{event_name}: #{params.to_json}")
         end
 
-        # Send webhook request
-        response = http.request(request)
-        case response
-        when Net::HTTPSuccess then
-          # nothing
-        else
-          Rails.logger.error("#{uri}: #{response.code} - #{response.message}")
-        end
+        send_webhook(body, event_name)
       rescue => ex
         Rails.logger.error(ex.message)
       end

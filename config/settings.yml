@@ -27,3 +27,6 @@ webhooks:
   webhooks_discourse_api_username:
     client: true
     default: ''
+  webhooks_new_user_notification:
+    client: true
+    default: true

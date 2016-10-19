@@ -9,3 +9,4 @@ en:
     webhooks_site_url: 'The discourse site URL'
     webhooks_discourse_api_key: 'The Discourse API key to use for API requests'
     webhooks_discourse_api_username: 'The Discourse admin username to use for API requests'
+    webhooks_new_user_notification: 'Check this box to send a webhook when a user joins the forum'
