@@ -70,6 +70,7 @@ after_initialize do
       end
     rescue => ex
       Rails.logger.error(ex.message)
+      Rails.logger.error(ex.backtrace)
     end
   end
 
@@ -169,6 +170,7 @@ after_initialize do
         send_webhook(body, event_name)
       rescue => ex
         Rails.logger.error(ex.message)
+        Rails.logger.error(ex.backtrace)
       end
     end
 
