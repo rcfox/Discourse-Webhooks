@@ -60,12 +60,16 @@ after_initialize do
   end
 
   DiscourseEvent.on(:user_created) do |*params|
-    if (SiteSetting.webhooks_logging_enabled)
-      Rails.logger.debug("user_created: #{params.to_json}")
-    end
-    if (SiteSetting.webhooks_new_user_notification)
-      body = "[#{params["username"]}](#{get_site_url()}users/#{params["username"]}/) has joined the forum"
-      send_webhook(body, "user_created")
+    begin
+      if (SiteSetting.webhooks_logging_enabled)
+        Rails.logger.debug("user_created: #{params.to_json}")
+      end
+      if (SiteSetting.webhooks_new_user_notification)
+        body = "[#{params["username"]}](#{get_site_url()}users/#{params["username"]}/) has joined the forum"
+        send_webhook(body, "user_created")
+      end
+    rescue => ex
+      Rails.logger.error(ex.message)
     end
   end
 
