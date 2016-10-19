@@ -31,6 +31,10 @@ after_initialize do
     return url
   end
 
+  DiscourseEvent.on(:user_created) do |*params|
+    Rails.logger.debug("user_created: #{params.to_json}")
+  end
+
   SiteSetting.webhooks_registered_events.split('|').each do |event_name|
 
     DiscourseEvent.on(event_name.to_sym) do |*params|
