@@ -65,7 +65,7 @@ after_initialize do
         Rails.logger.debug("user_created: #{params.to_json}")
       end
       if (SiteSetting.webhooks_new_user_notification)
-        body = "[#{params["username"]}](#{get_site_url()}users/#{params["username"]}/) has joined the forum"
+        body = "[#{params[0]["username"]}](#{get_site_url()}users/#{params[0]["username"]}/) has joined the forum"
         send_webhook(body, "user_created")
       end
     rescue => ex
