@@ -134,8 +134,6 @@ after_initialize do
         pp topic_json.to_json
         puts "<<<WEBHOOK<<<"
 
-        #raw: "This topic was automatically closed after"
-        next unless params[1]["raw"] == "This topic was automatically closed after"
         puts "Preparing outgoing webhook..."
 
         # Make topic link
@@ -149,6 +147,9 @@ after_initialize do
           body = body.to_json
           known_event = true
         elsif (event_name == "post_created")
+        	puts "Raw text: " + params[1]["raw"]
+        	next unless params[1]["raw"] != "This topic was automatically closed after"
+        	puts "Creating post body"
           body = {:message => "#{params[2].username} posted in #{topic_link}:\n\n#{params[1]["raw"]}", :metadata => event_name}
           body = body.to_json
           known_event = true
