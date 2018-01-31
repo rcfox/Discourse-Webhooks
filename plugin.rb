@@ -5,6 +5,7 @@
 # url: https://github.com/rcfox/Discourse-Webhooks
 
 require 'json'
+require 'pp'
 
 after_initialize do
 
@@ -124,11 +125,13 @@ after_initialize do
         puts ">>>WEBHOOK>>>"
         puts "---event_name=" + event_name
         puts "---params"
-        puts params
+        pp params
         puts "---params.inspect"
-        puts params.inspect
+        pp params.inspect
         puts "---topic_json"
-        puts topic_json
+        pp topic_json
+        puts "---topic_json.to_json"
+        pp topic_json.to_json
         puts "<<<WEBHOOK<<<"
 
 
