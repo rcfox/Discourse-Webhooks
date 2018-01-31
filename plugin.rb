@@ -134,7 +134,9 @@ after_initialize do
         pp topic_json.to_json
         puts "<<<WEBHOOK<<<"
 
-
+        #raw: "This topic was automatically closed after"
+        next unless params[1]["raw"] == "This topic was automatically closed after"
+        puts "Preparing outgoing webhook..."
 
         # Make topic link
         topic_link = "[#{topic_json["title"]}](#{site_url}t/#{topic_json["slug"]}/#{topic_json["id"]})"
