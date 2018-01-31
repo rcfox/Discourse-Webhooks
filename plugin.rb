@@ -121,19 +121,6 @@ after_initialize do
           end
         end
 
-
-        puts ">>>WEBHOOK>>>"
-        puts "---event_name=" + event_name
-        puts "---params"
-        pp params
-        puts "---params.inspect"
-        pp params.inspect
-        puts "---topic_json"
-        pp topic_json
-        puts "---topic_json.to_json"
-        pp topic_json.to_json
-        puts "<<<WEBHOOK<<<"
-
         puts "Preparing outgoing webhook..."
 
         # Make topic link
