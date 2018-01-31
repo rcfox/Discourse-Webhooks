@@ -90,13 +90,6 @@ after_initialize do
           topic_id = params[0].topic_id
         end
 
-        puts "---WEBHOOK---"
-        puts params
-        puts params.inspect
-        Rails.logger.debug("---WEBHOOK---")
-        Rails.logger.debug(params)
-        Rails.logger.debug(params.inspect)
-
         # Configure topic request
         topic_uri = URI.parse("#{site_url}t/#{topic_id}.json")
         topic_uri.query = URI.encode_www_form({:api_key => SiteSetting.webhooks_discourse_api_key, :api_username => SiteSetting.webhooks_discourse_api_username})
@@ -126,6 +119,17 @@ after_initialize do
             params.unshift(api_key.key)
           end
         end
+
+
+        puts ">>>WEBHOOK>>>"
+        puts "---event_name=" + event_name
+        puts "---params"
+        puts params
+        puts "---params.inspect"
+        puts params.inspect
+        puts "---topic_json"
+        puts topic_json
+        puts "<<<WEBHOOK<<<"
 
 
 
