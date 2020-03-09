@@ -1,8 +1,8 @@
-# name: webhooks
+# name: Genesys Cloud Webhooks
 # about: Make HTTP requests when certain events occur
-# version: 0.1
-# authors: Ryan Fox
-# url: https://github.com/rcfox/Discourse-Webhooks
+# version: 0.2
+# authors: Ryan Fox, Genesys
+# url: https://github.com/purecloudlabs/Discourse-Webhooks
 
 require 'json'
 require 'pp'
@@ -82,6 +82,7 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
+        puts "DiscourseEvent=#{event_name}"
         site_url = get_site_url()
 
         topic_id = -1;
