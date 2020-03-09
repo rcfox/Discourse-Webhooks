@@ -82,7 +82,7 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
-        Rails.logger.debug("DiscourseEvent=#{event_name}")
+        puts "DiscourseEvent=#{event_name}"
         site_url = get_site_url()
 
         topic_id = -1;
