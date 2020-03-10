@@ -9,7 +9,7 @@ require 'pp'
 require 'yaml'
 
 after_initialize do
-
+  Rails.logger.level = Logger::DEBUG
   SYSTEM_GUARDIAN = Guardian.new(User.find_by(id: -1))
 
   # Include the SSO record with all User data for staff requests so that you
