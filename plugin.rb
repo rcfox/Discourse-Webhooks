@@ -134,11 +134,11 @@ after_initialize do
         # Make webhook body
         known_event = false
         body = ''
-        if (event_name == "topic_created")
+        if (event_name == "topic_created" && topic_json["archetype"] == "regular")
           body = {:message => "#{params[2].username} created topic #{topic_link}", :metadata => event_name}
           body = body.to_json
           known_event = true
-        elsif (event_name == "post_created")
+        elsif (event_name == "post_created" && topic_json["archetype"] == "regular")
           Rails.logger.warn("post_created")
           if (params.length > 0)
             Rails.logger.warn(YAML::dump(params[0]))
