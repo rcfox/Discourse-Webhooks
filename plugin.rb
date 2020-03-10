@@ -9,7 +9,6 @@ require 'pp'
 require 'yaml'
 
 after_initialize do
-  Rails.logger.level = Logger::DEBUG
   SYSTEM_GUARDIAN = Guardian.new(User.find_by(id: -1))
 
   # Include the SSO record with all User data for staff requests so that you
@@ -64,6 +63,7 @@ after_initialize do
 
   DiscourseEvent.on(:user_created) do |*params|
     begin
+      Rails.logger.level = Logger::DEBUG
       if (SiteSetting.webhooks_logging_enabled)
         Rails.logger.debug("user_created: #{params.to_json}")
       end
@@ -83,6 +83,7 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
+        Rails.logger.level = Logger::DEBUG
         Rails.logger.info("DiscourseEvent=#{event_name}")
         Rails.logger.debug(YAML::dump(params))
         site_url = get_site_url()
