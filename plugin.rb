@@ -63,9 +63,8 @@ after_initialize do
 
   DiscourseEvent.on(:user_created) do |*params|
     begin
-      Rails.logger.level = Logger::DEBUG
       if (SiteSetting.webhooks_logging_enabled)
-        Rails.logger.debug("user_created: #{params.to_json}")
+        Rails.logger.warn("user_created: #{params.to_json}")
       end
       if (SiteSetting.webhooks_new_user_notification)
         body = {:message => "[#{params[0]["username"]}](#{get_site_url()}users/#{params[0]["username"]}/) (#{params[0]["name"]}) has joined the forum", :metadata => "user_created"}
@@ -83,9 +82,8 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
-        Rails.logger.level = Logger::DEBUG
-        Rails.logger.info("DiscourseEvent=#{event_name}")
-        Rails.logger.debug(YAML::dump(params))
+        Rails.logger.warn("DiscourseEvent=#{event_name}")
+        Rails.logger.warn(YAML::dump(params))
         site_url = get_site_url()
 
         topic_id = -1;
@@ -104,13 +102,13 @@ after_initialize do
         topic_request = Net::HTTP::Get.new(topic_uri)
 
         # Send topic request
-        Rails.logger.info("Getting topic from: #{topic_uri.to_s}")
+        Rails.logger.warn("Getting topic from: #{topic_uri.to_s}")
         topic_response = topic_http.request(topic_request)
         topic_json = {}
         case topic_response
         when Net::HTTPSuccess then
           topic_json = JSON.parse(topic_response.body)
-          Rails.logger.debug("event_name=#{event_name}\ntopic_json=#{topic_json}")
+          Rails.logger.warn("event_name=#{event_name}\ntopic_json=#{topic_json}")
         else
           Rails.logger.error("[TOPIC ERROR] for #{topic_uri}: #{topic_response.code} - #{topic_response.message}")
         end
@@ -125,7 +123,7 @@ after_initialize do
           end
         end
 
-        Rails.logger.info("Preparing outgoing webhook...")
+        Rails.logger.warn("Preparing outgoing webhook...")
 
         # Make topic link
         topic_link = "[#{topic_json["title"]}](#{site_url}t/#{topic_json["slug"]}/#{topic_json["id"]})"
@@ -138,7 +136,7 @@ after_initialize do
           body = body.to_json
           known_event = true
         elsif (event_name == "post_created")
-        	Rails.logger.debug("Raw text: " + params[1]["raw"])
+        	Rails.logger.warn("Raw text: " + params[1]["raw"])
         	next unless params[1]["raw"] != "This topic was automatically closed after"
           body = {:message => "#{params[2].username} posted in #{topic_link}:\n\n#{params[1]["raw"]}", :metadata => event_name}
           body = body.to_json
@@ -149,7 +147,7 @@ after_initialize do
         if (known_event != true)
           # Ignore unknown events
           if (SiteSetting.webhooks_logging_enabled)
-            Rails.logger.info("Ignoring #{event_name} event: #{params.to_json}")
+            Rails.logger.warn("Ignoring #{event_name} event: #{params.to_json}")
           end
           next
         elsif (topic_json["archetype"] != "regular")
