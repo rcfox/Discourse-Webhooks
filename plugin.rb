@@ -6,6 +6,7 @@
 
 require 'json'
 require 'pp'
+require 'yaml'
 
 after_initialize do
 
@@ -82,7 +83,8 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
-        puts "DiscourseEvent=#{event_name}"
+        Rails.logger.info("DiscourseEvent=#{event_name}")
+        Rails.logger.debug(YAML::dump(params))
         site_url = get_site_url()
 
         topic_id = -1;
@@ -122,7 +124,7 @@ after_initialize do
           end
         end
 
-        puts "Preparing outgoing webhook..."
+        Rails.logger.info("Preparing outgoing webhook...")
 
         # Make topic link
         topic_link = "[#{topic_json["title"]}](#{site_url}t/#{topic_json["slug"]}/#{topic_json["id"]})"
@@ -135,9 +137,8 @@ after_initialize do
           body = body.to_json
           known_event = true
         elsif (event_name == "post_created")
-        	puts "Raw text: " + params[1]["raw"]
+        	Rails.logger.debug("Raw text: " + params[1]["raw"])
         	next unless params[1]["raw"] != "This topic was automatically closed after"
-        	puts "Creating post body"
           body = {:message => "#{params[2].username} posted in #{topic_link}:\n\n#{params[1]["raw"]}", :metadata => event_name}
           body = body.to_json
           known_event = true
