@@ -84,6 +84,9 @@ after_initialize do
       begin
         Rails.logger.warn("DiscourseEvent=#{event_name}")
         Rails.logger.warn(YAML::dump(params))
+        Rails.logger.warn("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
+        Rails.logger.warn(topic_json.inspect)
+        
         site_url = get_site_url()
 
         topic_id = -1;
