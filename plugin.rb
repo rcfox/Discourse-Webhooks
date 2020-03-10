@@ -84,9 +84,7 @@ after_initialize do
       begin
         Rails.logger.warn("DiscourseEvent=#{event_name}")
         Rails.logger.warn(YAML::dump(params))
-        Rails.logger.warn("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
-        Rails.logger.warn(topic_json.inspect)
-        
+
         site_url = get_site_url()
 
         topic_id = -1;
@@ -112,6 +110,8 @@ after_initialize do
         when Net::HTTPSuccess then
           topic_json = JSON.parse(topic_response.body)
           Rails.logger.warn("event_name=#{event_name}\ntopic_json=#{topic_json}")
+          Rails.logger.warn("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
+          Rails.logger.warn(topic_json.inspect)
         else
           Rails.logger.error("[TOPIC ERROR] for #{topic_uri}: #{topic_response.code} - #{topic_response.message}")
         end
