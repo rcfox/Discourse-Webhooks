@@ -136,6 +136,16 @@ after_initialize do
           body = body.to_json
           known_event = true
         elsif (event_name == "post_created")
+          Rails.logger.warn("post_created")
+          if (params.length > 0)
+            Rails.logger.warn(YAML::dump(params[0]))
+          end
+          if (params.length > 1)
+            Rails.logger.warn(YAML::dump(params[1]))
+          end
+          if (params.length > 2)
+            Rails.logger.warn(YAML::dump(params[2]))
+          end
         	Rails.logger.warn("Raw text: " + params[1]["raw"])
         	next unless params[1]["raw"] != "This topic was automatically closed after"
           body = {:message => "#{params[2].username} posted in #{topic_link}:\n\n#{params[1]["raw"]}", :metadata => event_name}
