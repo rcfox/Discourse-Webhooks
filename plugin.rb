@@ -163,24 +163,24 @@ after_initialize do
         elsif (topic_json["archetype"] != "regular")
           # Ignore unknown archetypes
           if (SiteSetting.webhooks_logging_enabled)
-            Rails.logger.debug("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
+            Rails.logger.warn("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
 
             if (topic_json["archetype"].to_s != "regular")
-              Rails.logger.debug("topic_json[archetype].to_s != regular (double quotes)")
+              Rails.logger.warn("topic_json[archetype].to_s != regular (double quotes)")
             elsif (topic_json["archetype"].to_s != 'regular')
-              Rails.logger.debug("topic_json[archetype].to_s != regular (single quotes)")
+              Rails.logger.warn("topic_json[archetype].to_s != regular (single quotes)")
             else
-              Rails.logger.debug("[EQUAL] topic_json[\"archetype\"].to_s")
+              Rails.logger.warn("[EQUAL] topic_json[\"archetype\"].to_s")
             end
 
-            Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{topic_json}")
+            Rails.logger.warn("Ignoring unknown archetype for event #{event_name}: #{topic_json}")
           end
           next
         end
 
         # Log params object
         if (SiteSetting.webhooks_logging_enabled)
-          Rails.logger.info("Webhook event #{event_name}: #{params.to_json}")
+          Rails.logger.warn("Webhook event #{event_name}: #{params.to_json}")
         end
 
         send_webhook(body, event_name)
