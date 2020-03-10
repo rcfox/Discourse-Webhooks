@@ -64,7 +64,7 @@ after_initialize do
   DiscourseEvent.on(:user_created) do |*params|
     begin
       if (SiteSetting.webhooks_logging_enabled)
-        Rails.logger.warn("user_created: #{params.to_json}")
+        Rails.logger.info("user_created: #{params.to_json}")
       end
       if (SiteSetting.webhooks_new_user_notification)
         body = {:message => "[#{params[0]["username"]}](#{get_site_url()}users/#{params[0]["username"]}/) (#{params[0]["name"]}) has joined the forum", :metadata => "user_created"}
@@ -82,9 +82,7 @@ after_initialize do
       next unless SiteSetting.webhooks_enabled
 
       begin
-        Rails.logger.warn("DiscourseEvent=#{event_name}")
-        Rails.logger.warn(YAML::dump(params))
-
+        Rails.logger.debug("DiscourseEvent: #{event_name}")
         site_url = get_site_url()
 
         topic_id = -1;
@@ -103,15 +101,14 @@ after_initialize do
         topic_request = Net::HTTP::Get.new(topic_uri)
 
         # Send topic request
-        Rails.logger.warn("Getting topic from: #{topic_uri.to_s}")
+        Rails.logger.debug("Getting topic from: #{topic_uri.to_s}")
         topic_response = topic_http.request(topic_request)
         topic_json = {}
         case topic_response
         when Net::HTTPSuccess then
           topic_json = JSON.parse(topic_response.body)
-          Rails.logger.warn("event_name=#{event_name}\ntopic_json=#{topic_json}")
-          Rails.logger.warn("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
-          Rails.logger.warn(topic_json.inspect)
+          Rails.logger.debug("event_name=#{event_name}\ntopic_json=#{topic_json}")
+          Rails.logger.debug("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
         else
           Rails.logger.error("[TOPIC ERROR] for #{topic_uri}: #{topic_response.code} - #{topic_response.message}")
         end
@@ -126,7 +123,7 @@ after_initialize do
           end
         end
 
-        Rails.logger.warn("Preparing outgoing webhook...")
+        Rails.logger.debug("Preparing outgoing webhook...")
 
         # Make topic link
         topic_link = "[#{topic_json["title"]}](#{site_url}t/#{topic_json["slug"]}/#{topic_json["id"]})"
@@ -139,17 +136,7 @@ after_initialize do
           body = body.to_json
           known_event = true
         elsif (event_name == "post_created" && topic_json["archetype"] == "regular")
-          Rails.logger.warn("post_created")
-          if (params.length > 0)
-            Rails.logger.warn(YAML::dump(params[0]))
-          end
-          if (params.length > 1)
-            Rails.logger.warn(YAML::dump(params[1]))
-          end
-          if (params.length > 2)
-            Rails.logger.warn(YAML::dump(params[2]))
-          end
-        	Rails.logger.warn("Raw text: " + params[1]["raw"])
+        	Rails.logger.debug("Raw text: " + params[1]["raw"])
         	next unless params[1]["raw"] != "This topic was automatically closed after"
           body = {:message => "#{params[2].username} posted in #{topic_link}:\n\n#{params[1]["raw"]}", :metadata => event_name}
           body = body.to_json
@@ -160,30 +147,30 @@ after_initialize do
         if (known_event != true)
           # Ignore unknown events
           if (SiteSetting.webhooks_logging_enabled)
-            Rails.logger.warn("Ignoring #{event_name} event: #{params.to_json}")
+            Rails.logger.info("Ignoring #{event_name} event: #{params.to_json}")
           end
           next
         elsif (topic_json["archetype"] != "regular")
           # Ignore unknown archetypes
           if (SiteSetting.webhooks_logging_enabled)
-            Rails.logger.warn("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
+            Rails.logger.debug("topic_json[\"archetype\"] -> #{topic_json["archetype"]}")
 
             if (topic_json["archetype"].to_s != "regular")
-              Rails.logger.warn("topic_json[archetype].to_s != regular (double quotes)")
+              Rails.logger.debug("topic_json[archetype].to_s != regular (double quotes)")
             elsif (topic_json["archetype"].to_s != 'regular')
-              Rails.logger.warn("topic_json[archetype].to_s != regular (single quotes)")
+              Rails.logger.debug("topic_json[archetype].to_s != regular (single quotes)")
             else
-              Rails.logger.warn("[EQUAL] topic_json[\"archetype\"].to_s")
+              Rails.logger.debug("[EQUAL] topic_json[\"archetype\"].to_s")
             end
 
-            Rails.logger.warn("Ignoring unknown archetype for event #{event_name}: #{topic_json}")
+            Rails.logger.info("Ignoring unknown archetype for event #{event_name}: #{topic_json}")
           end
           next
         end
 
         # Log params object
         if (SiteSetting.webhooks_logging_enabled)
-          Rails.logger.warn("Webhook event #{event_name}: #{params.to_json}")
+          Rails.logger.debug("Webhook event #{event_name}: #{params.to_json}")
         end
 
         send_webhook(body, event_name)
